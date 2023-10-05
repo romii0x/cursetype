@@ -32,6 +32,7 @@ def main(window):
     magenta = curses.color_pair(1)
     green = curses.color_pair(2)
     #FUNCTIONS
+    #need a new file for update, generation, and init 
 
     def menu(y, x):
         options = [': Zen Mode', ': Paragraph mode', ': Sentence Mode', 'CurseType Menu']
@@ -66,9 +67,10 @@ def main(window):
         counter.addstr(0, 0, f'{wpm:.2f}wpm | {accuracy:.2f}%')
         counter.refresh()
     
-    #sentece_mode() notes
+    #sentence_mode() notes
 
     # add stops to realwpm calculation 
+    # ich / total * 100
     def sentence_mode():
         length = 80
         y, x = (window.getmaxyx()[0]//2, window.getmaxyx()[1]//2)
@@ -157,6 +159,7 @@ def main(window):
         y, x = (window.getmaxyx()[0]//2, window.getmaxyx()[1]//2-10)
         window.clear()
         window.move(y, x)
+        #Realwpm calculation
         results = [f'{seconds:.2f}s ', f'{accuracy:.2f}% ', f'{realwpm:.2f} wpm', f'{wpm:.2f} wpm avg']
         for i in range(len(results)):
             window.addstr(y-i, x, results[i])
@@ -166,12 +169,12 @@ def main(window):
 
     # paragraph_mode() notes
 
-    # end_sentence reference in backspace case
-    # breaks wpmcounter at first x on a newline
-
     # fix realwpm update and add realacc function
-
     # wpm update needs to start on x=1 for s1 and s2
+
+    # realwpm calculation still broken
+
+    #init for both functions needs to be wrapped into a file
     def paragraph_mode():
         #INIT
         length = 80
@@ -269,7 +272,7 @@ def main(window):
             
             
             # UPDATE
-            if pos > 1 and end_sentence == False:
+            if pos > 1 and pos != len(sentence) and end_sentence == False:
                 seconds = (time.time()-start)
                 cchpersecond = cch/seconds
                 wps = cchpersecond/5
@@ -299,7 +302,7 @@ def main(window):
                     stop_results[1] += 1
                 stop_results[2] += 1
         # Calculate accuracy as a percentage
-        realwpm = (stop_results[1] / stop_results[2]) * 100
+        realwpm = stop_results[1] / stop_results[2] * 100
         results = [f'{seconds:.2f}s ', f'{accuracy:.2f}% ', f'{realwpm:.2f} wpm', f'{wpm:.2f} wpm avg']
         for i in range(len(results)):
             window.addstr(y-i, x, results[i])
