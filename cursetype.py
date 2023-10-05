@@ -66,6 +66,9 @@ def main(window):
         counter.addstr(0, 0, f'{wpm:.2f}wpm | {accuracy:.2f}%')
         counter.refresh()
     
+    #sentece_mode() notes
+
+    # add stops to realwpm calculation 
     def sentence_mode():
         length = 80
         y, x = (window.getmaxyx()[0]//2, window.getmaxyx()[1]//2)
@@ -84,7 +87,7 @@ def main(window):
         window.addstr(y, x, sentence[pos], curses.A_UNDERLINE)
         window.addstr(y, x+1, sentence[pos+1], curses.A_BOLD)
         window.move(y, x)
-        curses.echo()
+        curses.noecho()
         curses.curs_set(0)
         while True:
             letter = window.getkey()
@@ -151,7 +154,6 @@ def main(window):
 
 
         #DISPLAY INFO
-        curses.noecho()
         y, x = (window.getmaxyx()[0]//2, window.getmaxyx()[1]//2-10)
         window.clear()
         window.move(y, x)
@@ -162,6 +164,14 @@ def main(window):
         curses.curs_set(1)
 
 
+    # paragraph_mode() notes
+
+    # end_sentence reference in backspace case
+    # breaks wpmcounter at first x on a newline
+
+    # fix realwpm update and add realacc function
+
+    # wpm update needs to start on x=1 for s1 and s2
     def paragraph_mode():
         #INIT
         length = 80
@@ -178,14 +188,12 @@ def main(window):
         posy = 0
         cch = 0
         ich = 0
-
-        #ADD SENTENCE(S)
         window.clear()
         x -= len(sentence)//2
-        window.addstr(y, x, sentence)
-        window.addstr(y, x, sentence[pos], curses.A_UNDERLINE)
+        window.addstr(y, x, sentence) #SENTENCEs
+        window.addstr(y, x, sentence[pos], curses.A_UNDERLINE) #POS MARKER
         window.addstr(y, x+1, sentence[pos+1], curses.A_BOLD)
-        window.addstr(y+1, x, s1)
+        window.addstr(y+1, x, s1) #SENTENCES
         window.addstr(y+2, x, s2)
         window.move(y, x)
         curses.noecho()
@@ -222,7 +230,7 @@ def main(window):
                     pos += 1
                     cch += 1
                 # INCORRECT
-                elif letter != sentence[pos]and end_sentence == False:
+                elif letter != sentence[pos] and end_sentence == False:
                     if sentence[pos] == ' ':
                         window.addstr(y, x, letter, magenta)
                         x += 1
@@ -250,6 +258,7 @@ def main(window):
                         x -= 1
                         pos -= 1
             elif letter == 'KEY_BACKSPACE' and pos == 0 and posy > 0:
+                end_sentence = True
                 window.addstr(y, x, sentence[pos])
                 y -= 1
                 posy -= 1
@@ -260,31 +269,41 @@ def main(window):
             
             
             # UPDATE
-            if pos > 1:
+            if pos > 1 and end_sentence == False:
                 seconds = (time.time()-start)
                 cchpersecond = cch/seconds
                 wps = cchpersecond/5
                 wpm = wps*60
                 accuracy = (cch/(cch+ich))*100
-                realwpm = (len(sentence+s1+s2)/seconds)*60
                 updatewpm(wpmcounter, wpm, accuracy)
             if pos < len(sentence):
                 window.addstr(y, x, sentence[pos], curses.A_UNDERLINE)
                 if pos < len(sentence)-1:
                     window.addstr(y, x+1, sentence[pos+1], curses.A_BOLD)
+            #INIT NEXT 
             end_sentence = False
             window.refresh()
             window.move(y, x)
 
 
         #DISPLAY INFO
-        curses.noecho()
         y, x = (window.getmaxyx()[0]//2, window.getmaxyx()[1]//2-10)
         window.clear()
         window.move(y, x)
+        stop_results = [0,0,0] #cch, ich, acc
+        for i in stops:
+            for stop in i:
+                if stop == 0:
+                    stop_results[0] += 1
+                elif stop == 1:
+                    stop_results[1] += 1
+                stop_results[2] += 1
+        # Calculate accuracy as a percentage
+        realwpm = (stop_results[1] / stop_results[2]) * 100
         results = [f'{seconds:.2f}s ', f'{accuracy:.2f}% ', f'{realwpm:.2f} wpm', f'{wpm:.2f} wpm avg']
         for i in range(len(results)):
             window.addstr(y-i, x, results[i])
+        window.addstr(y, x//2, f'C: {cch}, I: {ich}')
         window.getkey()
         curses.curs_set(1)
 
