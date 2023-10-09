@@ -1,9 +1,23 @@
+#  ▄▄· ▄• ▄▌▄▄▄  .▄▄ · ▄▄▄ .▄▄▄▄▄ ▄· ▄▌ ▄▄▄·▄▄▄ .
+# ▐█ ▌▪█▪██▌▀▄ █·▐█ ▀. ▀▄.▀·•██  ▐█▪██▌▐█ ▄█▀▄.▀·
+# ██ ▄▄█▌▐█▌▐▀▀▄ ▄▀▀▀█▄▐▀▀▪▄ ▐█.▪▐█▌▐█▪ ██▀·▐▀▀▪▄
+# ▐███▌▐█▄█▌▐█•█▌▐█▄▪▐█▐█▄▄▌ ▐█▌· ▐█▀·.▐█▪·•▐█▄▄▌
+# ·▀▀▀  ▀▀▀ .▀  ▀ ▀▀▀▀  ▀▀▀  ▀▀▀   ▀ • .▀    ▀▀▀        
+# author: https://github.com/ianshapiro1
+# 
+# CurseType is a simple wpm/accuracy typing test designed using the Unix Curses library
+# It features a console themed menu and various game modes that measure the user's wpm,
+# accuracy, # of letters missed, # of letters fixed, and # of letters typed correctly
+#
 import curses
 import random
 import time
 
-with open('1-1000.txt', 'r') as f:
+# Oxford 5000 from https://github.com/tgmgroup/Word-List-from-Oxford-Longman-5000
+# 1000 most common US words from https://gist.github.com/deekayen/4148741
+with open('o5000.txt', 'r') as f, open('1-1000.txt', 'r') as f2:
     w1000 = f.read().splitlines()
+    w1000 += f2.read().splitlines()
 words_by_num = [[word for word in w1000 if len(word) == i] for i in range(1, 12)]
 
 def main(window):
@@ -60,8 +74,8 @@ def main(window):
                     if game.mode == 2:
                         paragraph_mode()
         
-        def consolemessage(self, display, message):
-            display.addstr(0, 0, message)
+        def consolemessage(self, display, message, y, x):
+            display.addstr(y, x, message)
             display.refresh()
 
         def generate_sentence(self, l):
@@ -134,14 +148,16 @@ def main(window):
         window.clear()
         openingmessage = f'CurseType Console'
         errormessage = 'Not understood. Try typing "help" or "sentence"'
+        ency = ['"sentence" or "s" --generate a random sentence typing test',
+         '"paragraph" or "p" --generate a random paragraph typing test', '"quit" or "q" --quit the game']
         y, x = game.y//2, game.x//2-len(openingmessage)//2
-        commands = ['quit', 'sentence', 's', 'paragraph', 'p', 'help']
+        commands = ['quit', 'q', 'sentence', 's', 'paragraph', 'p', 'help']
         window.addstr(y-1, x, openingmessage, color.session)
         window.move(y, x)
         window.addstr(y, x, '>', color.session)
         x+=1
         start = x
-        displayline = curses.newwin(1, curses.COLS, y+1, start)
+        displayline = curses.newwin(5, curses.COLS, y+1, 0)
         window.nodelay(1)
         window.timeout(100)
         window.refresh()
@@ -163,18 +179,30 @@ def main(window):
                     if userinput == commands[0]:
                         exit()
                     elif userinput == commands[1]:
-                        sentence_mode()
+                        exit()
                     elif userinput == commands[2]:
                         sentence_mode()
                     elif userinput == commands[3]:
-                        paragraph_mode()
+                        sentence_mode()
                     elif userinput == commands[4]:
                         paragraph_mode()
+                    elif userinput == commands[5]:
+                        paragraph_mode()
+                    elif userinput == commands[6]:
+                        displayline.clear()
+                        for i in range(len(ency)):
+                            game.consolemessage(displayline, str(ency[i]), i, game.x//2-len(str(ency[i]))//2)
+                        errortick = tick+50
+                        for i in range(len(userinput)+1):
+                            window.delch(y, x)
+                            x -= 1
+                        window.move(y, max(start, x))
                 else:
                     for i in range(len(userinput)+1):
                         window.delch(y, x)
                         x -= 1
-                    game.consolemessage(displayline, errormessage)
+                    displayline.clear()
+                    game.consolemessage(displayline, errormessage, 0, game.x//2-len(errormessage)//2)
                     errortick = tick
                     window.move(y, max(start, x))
 
@@ -189,7 +217,7 @@ def main(window):
                 window.move(y, max(start, x))
 
             #OUTPUT
-            if tick < errortick+22 and tick > errortick+20:
+            if tick < errortick+32 and tick > errortick+30:
                 displayline.clear()
                 displayline.refresh()
                 window.move(y, max(start, x))
@@ -225,7 +253,7 @@ def main(window):
         while True:
             letter = window.getkey()
             # CHECK LETTER (CASE 1: correct letter, incorrect letter)
-            if letter in game.letters or letter == chr(32) or letter == chr(39):
+            if letter in game.letters or letter == chr(32) or letter == chr(39) or letter == chr(45):
                 #START AT FIRST LETTER
                 if game.posx == 0:
                     game.cch = 0
@@ -281,7 +309,7 @@ def main(window):
             elif letter == '\n':
                 sentence_mode()
             # UPDATE
-            if game.posx > 1 and game.posx != len(sentence) and letter in game.letters:
+            if game.posx > 1 and game.posx != len(sentence) and (letter in game.letters or letter == chr(39) or letter == chr(45)):
                 game.seconds = (time.time()-start)
                 cchpersecond = game.cch/game.seconds
                 wps = cchpersecond/5
@@ -293,7 +321,6 @@ def main(window):
             if game.posx < len(sentence)-1:
                 window.addstr(y, x, sentence[game.posx], curses.A_UNDERLINE)
                 window.addstr(y, x+1, sentence[game.posx+1], curses.A_BOLD)
-            window.refresh()
             window.move(y, x)
 
 
@@ -335,7 +362,7 @@ def main(window):
             if game.posx == len(sentence) and game.posy == len(sentences)-1:
                 break
             # CHECK LETTER (CASE 1: correct letter, incorrect letter)
-            if letter in game.letters or letter == chr(32) or letter == chr(39):
+            if letter in game.letters or letter == chr(32) or letter == chr(39) or letter == chr(45):
                 #START AT FIRST LETTER
                 if game.posx == 0 and game.posy == 0:
                     start = time.time()
@@ -408,7 +435,7 @@ def main(window):
                 paragraph_mode()
             
             # UPDATE
-            if game.posx > 1 and game.posx != len(sentence) and game.end_sentence == False and letter in game.letters:
+            if game.posx > 1 and game.posx != len(sentence) and game.end_sentence == False and (letter in game.letters or letter == chr(39) or letter == chr(45)):
                 game.seconds = (time.time()-start)
                 cchpersecond = game.cch/game.seconds
                 game.wpm = (cchpersecond/5)*60
