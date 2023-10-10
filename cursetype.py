@@ -224,13 +224,36 @@ def main(window):
             if start >= x:
                 x = start
 
+    # color(menu, correct, incorrect)
+    # difficulty(1-1000.txt, 1-1000.txt+o3000.txt, 1-1000.txt+o5000.txt)
+    # need function in game to reread files for difficulty
     def settings():
         window.clear()
         game.resetyx()
         y, x = game.y, game.x
+        window.nodelay(1)
+        window.timeout(100)
+        #init screen content
+        y -= len(game.settings)//2
+        for i in len(game.settings):
+            window.addstr(y-i, x, game.settings)
+            y += 1
+        window.move(y, x)
+        while True:
+            key = window.getkey()
+            #CASES
+            if key == 'KEY_UP':
+                y -= 1
+            elif key == 'KEY_DOWN':
+                y += 1
+            elif key == '\n':
+                pass
+                #init next screen
+            #init next
+        window.move(y, x)
+        #update
 
-
-
+    # need function in game for writing stats
     def sentence_mode():
         window.nodelay(0)
         game.mode = 1
