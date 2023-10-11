@@ -9,16 +9,14 @@
 # It features a console themed menu and various game modes that measure the user's wpm,
 # accuracy, # of letters missed, # of letters fixed, and # of letters typed correctly
 #
+# Oxford 3/5000 from https://github.com/tgmgroup/Word-List-from-Oxford-Longman-5000
+# 1000 most common US words from https://gist.github.com/deekayen/4148741
 import curses
 import random
 import time
 
-# Oxford 5000 from https://github.com/tgmgroup/Word-List-from-Oxford-Longman-5000
-# 1000 most common US words from https://gist.github.com/deekayen/4148741
-with open('o5000.txt', 'r') as f, open('1-1000.txt', 'r') as f2:
+with open('1-1000.txt', 'r') as f:
     w1000 = f.read().splitlines()
-    w1000 += f2.read().splitlines()
-words_by_num = [[word for word in w1000 if len(word) == i] for i in range(1, 12)]
 
 def main(window):
     #  INIT COLORS
@@ -27,20 +25,26 @@ def main(window):
     for i in range(0, curses.COLORS):
         curses.init_pair(i + 1, i, -1)
 
+
     class Game:
         def __init__(self):
+            self.w1000 = w1000
             self.letters = [chr(i) for i in range(97, 123)] + [chr(i) for i in range(65, 91)]  
             self.y = window.getmaxyx()[0]
             self.x = window.getmaxyx()[1]
             self.length = self.x//2
             self.posx = 0
             self.posy = 0
-            self.commands = ['quit', 'q', 'sentence', 's', 'paragraph', 'p', 'help']
-            self.openingmessage = f'CurseType Console'
+            self.commands = ['quit', 'q', 'sentence', 's', 'paragraph', 'p', 'help', 'settings', 'c']
+            self.openingmessage = 'Welcome to CurseType! Type "sentence" and press enter to get started.'
+            self.consolebanner = f'CurseType Console'
             self.errormessage = 'Not understood. Try typing "help" or "sentence"'
             self.ency = ['"sentence" or "s" --generate a random sentence typing test',
-            '"paragraph" or "p" --generate a random paragraph typing test', '"quit" or "q" --quit the game']
+            '"paragraph" or "p" --generate a random paragraph typing test', '"settings" or "c" --settings menu','"quit" or "q" --quit the game']
             self.specialchars = [chr(39), chr(32), chr(45), 'KEY_BACKSPACE']
+            self.settings = ['color', 'difficulty']
+            self.settingscolor = ['correct letter', 'incorrect letter', 'menu color']
+            self.settingsdifficulty = ['common words', 'oxford 3000', 'oxford 5000']
             self.end_sentence = False
             self.mode = 0
             self.wpm = 0; self.acc =  0; self.seconds = 0; self.cch = 0; self.ich = 0; self.realcch = 0; self.realich = 0
@@ -59,7 +63,363 @@ def main(window):
             self.y = window.getmaxyx()[0]//2
             self.x = window.getmaxyx()[1]//2
 
-        # 
+        def setgamedifficulty(self, difficulty):
+            if difficulty == 0:
+                with open('1-1000.txt', 'r') as f1:
+                    game.w1000 = f1.read().splitlines()
+            elif difficulty == 1:
+                with open('1-1000.txt', 'r') as f1, open('o3000.txt', 'r') as f2:
+                    game.w1000 = f1.read().splitlines()
+                    game.w1000 += f2.read().splitlines()
+            elif difficulty == 2:
+                with open('o5000.txt', 'r') as f1, open('1-1000.txt', 'r') as f2, open('o3000.txt', 'r') as f3:
+                    game.w1000 = f1.read().splitlines()
+                    game.w1000 += f2.read().splitlines()
+                    game.w1000 += f3.read().splitlines()
+
+        def settingsdifficultymenu(self):
+            window.clear()
+            self.resetyx()
+            y, x = self.y//2, self.x//2
+            window.nodelay(1)
+            window.timeout(100)
+            curses.curs_set(0)
+            option = 0
+            #init screen content
+            y -= len(self.settingsdifficulty)//2
+            textstart = y
+            def sdminit(y, x, o):
+                window.addstr(y+len(self.settingsdifficulty)+1, x, 'Back(home) | Select(enter)')
+                for i in range(len(self.settingsdifficulty)):
+                    if i == option:
+                        window.addstr(y, x, self.settingsdifficulty[i], curses.A_REVERSE)
+                    else:
+                        window.addstr(y, x, self.settingsdifficulty[i], color.session)
+                    y += 1
+            sdminit(y, x, option)
+            y -= len(self.settingsdifficulty)
+            starty = y
+            maxy = y+len(self.settingsdifficulty)-1
+            window.move(y, x)
+            while True:
+                try:
+                    key = window.getkey()
+                except:
+                    key = None
+                #CASES
+                if key == 'KEY_UP':
+                    if y != starty:
+                        y -= 1
+                        option -= 1
+                        window.clear()
+                        sdminit(textstart, x, option)
+                elif key == 'KEY_DOWN':
+                    if y != maxy:
+                        y += 1
+                        option += 1
+                        window.clear()
+                        sdminit(textstart, x, option)
+                elif key == '\n':
+                    if option == 0:
+                        #menu color
+                        self.setgamedifficulty(0)
+                        window.addstr(textstart-3, x, f'Set to {game.settingsdifficulty[0]}')
+                    elif option == 1:
+                        #correct
+                        self.setgamedifficulty(1)
+                        window.addstr(textstart-3, x, f'Set to {game.settingsdifficulty[1]}')
+                    elif option == 2:
+                        #incorrect
+                        self.setgamedifficulty(2)
+                        window.addstr(textstart-3, x, f'Set to {game.settingsdifficulty[2]}')
+                
+                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE':
+                    self.settingsmainmenu()
+                    #init next screen
+                #init next
+                window.move(y, x)
+            #end
+
+        def setincorrectcolor(self):
+            window.clear()
+            self.resetyx()
+            y, x = self.y//3, self.x//5
+            window.nodelay(1)
+            window.timeout(100)
+            curses.curs_set(1)
+            starty = y
+            startx = x
+            maxx = int(self.x-(1/5*self.x))
+            screenrange = maxx-startx
+            #init screen content
+            for i in range(0, curses.COLORS):
+                if x < maxx:
+                    window.addstr(y, x, '0', curses.color_pair(i+1))
+                    x += 1
+                else:
+                    x = self.x//5
+                    y += 1
+            maxy = y
+            option = 1
+            window.move(starty, startx)
+            y, x = starty, startx
+            while True:
+                try:
+                    key = window.getkey()
+                except:
+                    key = None
+                #CASES
+                if key == 'KEY_UP':
+                    if y != starty:
+                        y -= 1
+                        option -= screenrange+1
+                elif key == 'KEY_DOWN':
+                    if y != maxy:
+                        y += 1
+                        option += screenrange+1
+                elif key == 'KEY_LEFT':
+                    if x != startx:
+                        x -= 1
+                        option -= 1
+                elif key == 'KEY_RIGHT':
+                    if x != maxx:
+                        x += 1
+                        option += 1
+                elif key == '\n':
+                    color.incorrect = curses.color_pair(option)
+                    self.settingscolormenu()
+                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE':
+                    self.settingscolormenu()
+
+                #init next
+                window.move(y, x)
+            #end
+
+        def setcorrectcolor(self):
+            window.clear()
+            self.resetyx()
+            y, x = self.y//3, self.x//5
+            window.nodelay(1)
+            window.timeout(100)
+            curses.curs_set(1)
+            starty = y
+            startx = x
+            maxx = int(self.x-(1/5*self.x))
+            screenrange = maxx-startx
+            #init screen content
+            for i in range(0, curses.COLORS):
+                if x < maxx:
+                    window.addstr(y, x, '0', curses.color_pair(i+1))
+                    x += 1
+                else:
+                    x = self.x//5
+                    y += 1
+            maxy = y
+            option = 1
+            window.move(starty, startx)
+            y, x = starty, startx
+            while True:
+                try:
+                    key = window.getkey()
+                except:
+                    key = None
+                #CASES
+                if key == 'KEY_UP':
+                    if y != starty:
+                        y -= 1
+                        option -= screenrange+1
+                elif key == 'KEY_DOWN':
+                    if y != maxy:
+                        y += 1
+                        option += screenrange+1
+                elif key == 'KEY_LEFT':
+                    if x != startx:
+                        x -= 1
+                        option -= 1
+                elif key == 'KEY_RIGHT':
+                    if x != maxx:
+                        x += 1
+                        option += 1
+                elif key == '\n':
+                    color.correct = curses.color_pair(option)
+                    self.settingscolormenu()
+                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE':
+                    self.settingscolormenu()
+
+                #init next
+                window.move(y, x)
+            #end
+
+        def setmenucolor(self):
+            window.clear()
+            self.resetyx()
+            y, x = self.y//3, self.x//5
+            window.nodelay(1)
+            window.timeout(100)
+            curses.curs_set(1)
+            starty = y
+            startx = x
+            maxx = int(self.x-(1/5*self.x))
+            screenrange = maxx-startx
+            #init screen content
+            for i in range(0, curses.COLORS):
+                if x < maxx:
+                    window.addstr(y, x, '0', curses.color_pair(i+1))
+                    x += 1
+                else:
+                    x = self.x//5
+                    y += 1
+            maxy = y
+            option = 1
+            window.move(starty, startx)
+            y, x = starty, startx
+            while True:
+                try:
+                    key = window.getkey()
+                except:
+                    key = None
+                #CASES
+                if key == 'KEY_UP':
+                    if y != starty:
+                        y -= 1
+                        option -= screenrange+1
+                elif key == 'KEY_DOWN':
+                    if y != maxy:
+                        y += 1
+                        option += screenrange+1
+                elif key == 'KEY_LEFT':
+                    if x != startx:
+                        x -= 1
+                        option -= 1
+                elif key == 'KEY_RIGHT':
+                    if x != maxx:
+                        x += 1
+                        option += 1
+                elif key == '\n':
+                    color.session = curses.color_pair(option)
+                    self.settingscolormenu()
+                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE':
+                    self.settingscolormenu()
+
+                #init next
+                window.move(y, x)
+            #end
+
+        def settingscolormenu(self):
+            window.clear()
+            self.resetyx()
+            y, x = self.y//2, self.x//2
+            window.nodelay(1)
+            window.timeout(100)
+            curses.curs_set(0)
+            option = 0
+            #init screen content
+            y -= len(self.settingscolor)//2
+            textstart = y
+            def scminit(y, x, o):
+                window.addstr(y+len(self.settingscolor)+1, x, 'Back(home) | Select(enter)')
+                for i in range(len(self.settingscolor)):
+                    if i == option:
+                        window.addstr(y, x, self.settingscolor[i], curses.A_REVERSE)
+                    else:
+                        window.addstr(y, x, self.settingscolor[i], color.session)
+                    y += 1
+            scminit(y, x, option)
+            y -= len(self.settingscolor)
+            starty = y
+            maxy = y+len(self.settingscolor)-1
+            window.move(y, x)
+            while True:
+                try:
+                    key = window.getkey()
+                except:
+                    key = None
+                #CASES
+                if key == 'KEY_UP':
+                    if y != starty:
+                        y -= 1
+                        option -= 1
+                        window.clear()
+                        scminit(textstart, x, option)
+                elif key == 'KEY_DOWN':
+                    if y != maxy:
+                        y += 1
+                        option += 1
+                        window.clear()
+                        scminit(textstart, x, option)
+                elif key == '\n':
+                    if option == 0:
+                        #menu color
+                        self.setcorrectcolor()
+                    elif option == 1:
+                        #correct
+                        self.setincorrectcolor()
+                    elif option == 2:
+                        #incorrect
+                        self.setmenucolor()
+                
+                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE':
+                    self.settingsmainmenu()
+                    #init next screen
+                #init next
+                window.move(y, x)
+            #end
+
+        def settingsmainmenu(self):
+            window.clear()
+            self.resetyx()
+            y, x = self.y//2, self.x//2
+            window.nodelay(1)
+            window.timeout(100)
+            curses.curs_set(0)
+            #init screen content
+            y -= len(self.settings)//2
+            option = 0
+            textstart = y
+            def smminit(y, x, o):
+                window.addstr(y+len(self.settings)+1, x, 'Back(home) | Select(enter)')
+                for i in range(len(self.settings)):
+                    if i == option:
+                        window.addstr(y, x, self.settings[i], curses.A_REVERSE)
+                    else:
+                        window.addstr(y, x, self.settings[i], color.session)
+                    y += 1
+            smminit(y, x, option)
+            y -= len(self.settings)
+            starty = y
+            maxy = y+len(self.settings)-1
+            window.move(y, x)
+            while True:
+                try:
+                    key = window.getkey()
+                except:
+                    key = None
+                #CASES
+                if key == 'KEY_UP':
+                    if y != starty:
+                        y -= 1
+                        option -= 1
+                        window.clear()
+                        smminit(textstart, x, option)
+                elif key == 'KEY_DOWN':
+                    if y != maxy:
+                        y += 1
+                        option += 1
+                        window.clear()
+                        smminit(textstart, x, option)
+                elif key == '\n':
+                    if option == 0:
+                        self.settingscolormenu()
+                    elif option == 1:
+                        self.settingsdifficultymenu()
+                
+                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE':
+                    menu()
+                    #init next screen
+                #init next
+                window.move(y, x)
+            #end
+
         def displayinfo(self):
             self.centeryx()
             self.x -= 10
@@ -89,7 +449,7 @@ def main(window):
             sentence = []
             slen = 0
             while True:
-                word = random.choice(w1000)
+                word = random.choice(self.w1000)
                 if slen + len(word)+1 < l:
                     sentence.append(word)
                     slen += len(word)+1
@@ -109,7 +469,7 @@ def main(window):
                 l += len(w)
                 n += 1
             return l/n
-
+        wordlen = avgwordlength(w1000)
         def updatewpm(self, counter):
             counter.clear()
             if self.wpm < 200:
@@ -119,8 +479,7 @@ def main(window):
                 counter.addstr(0, 0, f'{self.wpm:.2f} wpm ')
                 counter.addstr(0, 11, f'| {self.acc:.2f} %', curses.color_pair(color.indicators[int(self.acc*2)//10-1]))
             counter.refresh()
-
-        wordlen = avgwordlength(w1000)   
+   
     class Color:
         def __init__(self):
             self.seed = random.randint(0, 232)
@@ -158,13 +517,13 @@ def main(window):
     color = Color()  
     game = Game()
 
-    def menu():
+    def menu(first=False):
         curses.curs_set(1)
         game.resetyx()
         game.resetpos()
         window.clear()
-        y, x = game.y//2, game.x//2-len(game.openingmessage)//2
-        window.addstr(y-1, x, game.openingmessage, color.session)
+        y, x = game.y//2, game.x//2-len(game.consolebanner)//2
+        window.addstr(y-1, x, game.consolebanner, color.session)
         window.move(y, x)
         window.addstr(y, x, '❯', color.session)
         x+=1
@@ -209,12 +568,16 @@ def main(window):
                             window.delch(y, x)
                             x -= 1
                         window.move(y, max(start, x))
+                    elif userinput == game.commands[7]:
+                        game.settingsmainmenu()
+                    elif userinput == game.commands[8]:
+                        game.settingsmainmenu()
                 else:
                     for i in range(len(userinput)+1):
                         window.delch(y, x)
                         x -= 1
                     displayline.clear()
-                    game.consolemessage(displayline, game.errormessage, 0, game.x//2-len(errormessage)//2)
+                    game.consolemessage(displayline, game.errormessage, 0, game.x//2-len(game.errormessage)//2)
                     errortick = tick
                     window.move(y, max(start, x))
 
@@ -229,41 +592,17 @@ def main(window):
                 window.move(y, max(start, x))
 
             #OUTPUT
+            if first:
+                game.consolemessage(displayline, game.openingmessage, 0, game.x//2-len(game.openingmessage)//2)
+                errortick = tick+30
+                first = False
+                window.move(y, max(start, x))
             if tick < errortick+32 and tick > errortick+30:
                 displayline.clear()
                 displayline.refresh()
                 window.move(y, max(start, x))
             if start >= x:
                 x = start
-
-    # color(menu, correct, incorrect)
-    # difficulty(1-1000.txt, 1-1000.txt+o3000.txt, 1-1000.txt+o5000.txt)
-    # need function in game to reread files for difficulty
-    def settings():
-        window.clear()
-        game.resetyx()
-        y, x = game.y, game.x
-        window.nodelay(1)
-        window.timeout(100)
-        #init screen content
-        y -= len(game.settings)//2
-        for i in len(game.settings):
-            window.addstr(y-i, x, game.settings)
-            y += 1
-        window.move(y, x)
-        while True:
-            key = window.getkey()
-            #CASES
-            if key == 'KEY_UP':
-                y -= 1
-            elif key == 'KEY_DOWN':
-                y += 1
-            elif key == '\n':
-                pass
-                #init next screen
-            #init next
-        window.move(y, x)
-        #update
 
     # need function in game for writing stats
     def sentence_mode():
@@ -500,13 +839,13 @@ def main(window):
         game.displayinfo()
 
 
-    #LOOP
-    if game.x < 50 or game.y < 12:
+    #MAIN
+    if game.x < 50 or game.y < 15:
         window.addstr(0, 0, f'Error: Terminal Size({game.x}x{game.y}) too small.')
         window.addstr(2, 0, f'Press any key to quit')
         window.getch()
         exit()
-    menu()
+    menu(first=True)
     
 
 
