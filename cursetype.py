@@ -265,10 +265,7 @@ def main(window):
         window.move(y, x)
         #update
 
-<<<<<<< HEAD
-=======
     # need function in game for writing stats
->>>>>>> 12a66895971d6ee59ac22082b1cc226f975c70d5
     def sentence_mode():
         window.nodelay(1)
         window.timeout(100)
