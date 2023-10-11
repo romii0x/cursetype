@@ -5,7 +5,7 @@
 # ·▀▀▀  ▀▀▀ .▀  ▀ ▀▀▀▀  ▀▀▀  ▀▀▀   ▀ • .▀    ▀▀▀        
 # author: https://github.com/ianshapiro1
 # 
-# CurseType is a simple wpm/accuracy typing test designed using the Unix Curses library
+# CurseType is a simple wpm/accuracy typing test written using the python curses library
 # It features a console themed menu and various game modes that measure the user's wpm,
 # accuracy, # of letters missed, # of letters fixed, and # of letters typed correctly
 #
@@ -21,7 +21,7 @@ with open('o5000.txt', 'r') as f, open('1-1000.txt', 'r') as f2:
 words_by_num = [[word for word in w1000 if len(word) == i] for i in range(1, 12)]
 
 def main(window):
-    #INIT
+    #  INIT COLORS
     curses.start_color()
     curses.use_default_colors()
     for i in range(0, curses.COLORS):
@@ -32,9 +32,15 @@ def main(window):
             self.letters = [chr(i) for i in range(97, 123)] + [chr(i) for i in range(65, 91)]  
             self.y = window.getmaxyx()[0]
             self.x = window.getmaxyx()[1]
-            self.length = 80
+            self.length = self.x//2
             self.posx = 0
             self.posy = 0
+            self.commands = ['quit', 'q', 'sentence', 's', 'paragraph', 'p', 'help']
+            self.openingmessage = f'CurseType Console'
+            self.errormessage = 'Not understood. Try typing "help" or "sentence"'
+            self.ency = ['"sentence" or "s" --generate a random sentence typing test',
+            '"paragraph" or "p" --generate a random paragraph typing test', '"quit" or "q" --quit the game']
+            self.specialchars = [chr(39), chr(32), chr(45), 'KEY_BACKSPACE']
             self.end_sentence = False
             self.mode = 0
             self.wpm = 0; self.acc =  0; self.seconds = 0; self.cch = 0; self.ich = 0; self.realcch = 0; self.realich = 0
@@ -52,7 +58,8 @@ def main(window):
         def centeryx(self):
             self.y = window.getmaxyx()[0]//2
             self.x = window.getmaxyx()[1]//2
-     
+
+        # 
         def displayinfo(self):
             self.centeryx()
             self.x -= 10
@@ -95,6 +102,14 @@ def main(window):
                     return ' '.join(sentence)
                     break
         
+        def avgwordlength(sentencelist):
+            l = 0
+            n = 0
+            for w in sentencelist:
+                l += len(w)
+                n += 1
+            return l/n
+
         def updatewpm(self, counter):
             counter.clear()
             if self.wpm < 200:
@@ -103,7 +118,9 @@ def main(window):
             else:
                 counter.addstr(0, 0, f'{self.wpm:.2f} wpm ')
                 counter.addstr(0, 11, f'| {self.acc:.2f} %', curses.color_pair(color.indicators[int(self.acc*2)//10-1]))
-            counter.refresh()      
+            counter.refresh()
+
+        wordlen = avgwordlength(w1000)   
     class Color:
         def __init__(self):
             self.seed = random.randint(0, 232)
@@ -146,15 +163,10 @@ def main(window):
         game.resetyx()
         game.resetpos()
         window.clear()
-        openingmessage = f'CurseType Console'
-        errormessage = 'Not understood. Try typing "help" or "sentence"'
-        ency = ['"sentence" or "s" --generate a random sentence typing test',
-         '"paragraph" or "p" --generate a random paragraph typing test', '"quit" or "q" --quit the game']
-        y, x = game.y//2, game.x//2-len(openingmessage)//2
-        commands = ['quit', 'q', 'sentence', 's', 'paragraph', 'p', 'help']
-        window.addstr(y-1, x, openingmessage, color.session)
+        y, x = game.y//2, game.x//2-len(game.openingmessage)//2
+        window.addstr(y-1, x, game.openingmessage, color.session)
         window.move(y, x)
-        window.addstr(y, x, '>', color.session)
+        window.addstr(y, x, '❯', color.session)
         x+=1
         start = x
         displayline = curses.newwin(5, curses.COLS, y+1, 0)
@@ -175,23 +187,23 @@ def main(window):
                 userinput = ''
                 for i in range(start, x):
                     userinput += chr(window.inch(y, i) & 0xFF)
-                if userinput in commands:
-                    if userinput == commands[0]:
+                if userinput in game.commands:
+                    if userinput == game.commands[0]:
                         exit()
-                    elif userinput == commands[1]:
+                    elif userinput == game.commands[1]:
                         exit()
-                    elif userinput == commands[2]:
+                    elif userinput == game.commands[2]:
                         sentence_mode()
-                    elif userinput == commands[3]:
+                    elif userinput == game.commands[3]:
                         sentence_mode()
-                    elif userinput == commands[4]:
+                    elif userinput == game.commands[4]:
                         paragraph_mode()
-                    elif userinput == commands[5]:
+                    elif userinput == game.commands[5]:
                         paragraph_mode()
-                    elif userinput == commands[6]:
+                    elif userinput == game.commands[6]:
                         displayline.clear()
-                        for i in range(len(ency)):
-                            game.consolemessage(displayline, str(ency[i]), i, game.x//2-len(str(ency[i]))//2)
+                        for i in range(len(game.ency)):
+                            game.consolemessage(displayline, str(game.ency[i]), i, game.x//2-len(str(game.ency[i]))//2)
                         errortick = tick+50
                         for i in range(len(userinput)+1):
                             window.delch(y, x)
@@ -202,7 +214,7 @@ def main(window):
                         window.delch(y, x)
                         x -= 1
                     displayline.clear()
-                    game.consolemessage(displayline, errormessage, 0, game.x//2-len(errormessage)//2)
+                    game.consolemessage(displayline, game.errormessage, 0, game.x//2-len(errormessage)//2)
                     errortick = tick
                     window.move(y, max(start, x))
 
@@ -229,10 +241,9 @@ def main(window):
         game.resetyx()
         y, x = game.y, game.x
 
-
-
     def sentence_mode():
-        window.nodelay(0)
+        window.nodelay(1)
+        window.timeout(100)
         game.mode = 1
         game.resetyx()
         game.resetstats()
@@ -251,7 +262,10 @@ def main(window):
         curses.noecho()
         curses.curs_set(0)
         while True:
-            letter = window.getkey()
+            try:
+                letter = window.getkey()
+            except:
+                letter = None
             # CHECK LETTER (CASE 1: correct letter, incorrect letter)
             if letter in game.letters or letter == chr(32) or letter == chr(39) or letter == chr(45):
                 #START AT FIRST LETTER
@@ -265,7 +279,7 @@ def main(window):
                 # CORRECT
                 if letter == sentence[game.posx]:
                     stops[game.posx] = 1
-                    window.addstr(y, x, sentence[game.posx], color.correct)
+                    window.addch(y, x, sentence[game.posx], color.correct)
                     x += 1
                     game.posx += 1
                     game.cch += 1
@@ -273,13 +287,13 @@ def main(window):
                 # INCORRECT
                 elif letter != sentence[game.posx]:
                     if sentence[game.posx] == ' ':
-                        window.addstr(y, x, letter, color.incorrect)
+                        window.addch(y, x, letter, color.incorrect)
                         x += 1
                         game.posx += 1
                         game.ich += 1
                         game.realich += 1
                     else:
-                        window.addstr(y, x, sentence[game.posx], color.incorrect)
+                        window.addch(y, x, sentence[game.posx], color.incorrect)
                         x += 1
                         game.posx += 1
                         game.ich += 1
@@ -290,13 +304,13 @@ def main(window):
                     break
                 else:
                     if stops[game.posx-1] == 0:
-                        window.addstr(y, x-1, sentence[game.posx-1])
+                        window.addch(y, x-1, sentence[game.posx-1])
                         x -= 1
                         game.posx -= 1
                         game.realich -= 1
                     elif stops[game.posx-1] == 1:
                         stops[game.posx-1] = 0
-                        window.addstr(y, x-1, sentence[game.posx-1])
+                        window.addch(y, x-1, sentence[game.posx-1])
                         x -= 1
                         game.posx -= 1
                         game.realcch -= 1
@@ -304,35 +318,38 @@ def main(window):
             elif letter == 'KEY_HOME':
                 menu()
             # CASE 3: END OF SENTENCE
-            elif game.posx > len(sentence)-1:
+            elif game.posx > len(sentence)-1 and letter != None:
                 break
             elif letter == '\n':
                 sentence_mode()
             # UPDATE
-            if game.posx > 1 and game.posx != len(sentence) and (letter in game.letters or letter == chr(39) or letter == chr(45)):
+            if game.posx > 1 and game.posx != len(sentence) and (letter in game.letters or letter in game.specialchars):
                 game.seconds = (time.time()-start)
                 cchpersecond = game.cch/game.seconds
-                wps = cchpersecond/5
+                wps = cchpersecond/min(max(1, game.cch), Game.wordlen)
                 game.wpm = wps*60
                 game.acc = (game.cch/(game.cch+game.ich))*100
                 game.updatewpm(wpmcounter)
             if game.posx < len(sentence):
-                window.addstr(y, x, sentence[game.posx], curses.A_UNDERLINE)
+                window.addch(y, x, sentence[game.posx], curses.A_UNDERLINE)
             if game.posx < len(sentence)-1:
-                window.addstr(y, x, sentence[game.posx], curses.A_UNDERLINE)
-                window.addstr(y, x+1, sentence[game.posx+1], curses.A_BOLD)
+                window.addch(y, x, sentence[game.posx], curses.A_UNDERLINE)
+                window.addch(y, x+1, sentence[game.posx+1], curses.A_BOLD)
+            #INIT NEXT
             window.move(y, x)
 
 
         #DISPLAY INFO
+        window.nodelay(0)
         game.displayinfo()
 
     def paragraph_mode():
         #INIT
-        window.nodelay(0)
+        window.nodelay(1)
+        window.timeout(100)
         game.mode = 2
         game.resetyx()
-        y, x = game.y//3, game.x//2
+        y, x = game.y//2-2, game.x//2
         s0 = game.generate_sentence(game.length)
         s1 = game.generate_sentence(game.length)
         s2 = game.generate_sentence(game.length)
@@ -356,10 +373,13 @@ def main(window):
         game.end_sentence = False
         window.refresh()
         while True:
-            letter = window.getkey()
+            try:
+                letter = window.getkey()
+            except:
+                letter = None
             if letter == 'KEY_HOME':
                 menu()
-            if game.posx == len(sentence) and game.posy == len(sentences)-1:
+            if game.posx == len(sentence) and game.posy == len(sentences)-1 and letter != None:
                 break
             # CHECK LETTER (CASE 1: correct letter, incorrect letter)
             if letter in game.letters or letter == chr(32) or letter == chr(39) or letter == chr(45):
@@ -385,7 +405,7 @@ def main(window):
                 # CORRECT
                 if letter == sentence[game.posx] and game.end_sentence == False:
                     stops[game.posy][game.posx] = 1
-                    window.addstr(y, x, sentence[game.posx], color.correct)
+                    window.addch(y, x, sentence[game.posx], color.correct)
                     x += 1
                     game.posx += 1
                     game.cch += 1
@@ -393,13 +413,13 @@ def main(window):
                 # INCORRECT
                 elif letter != sentence[game.posx] and game.end_sentence == False:
                     if sentence[game.posx] == ' ':
-                        window.addstr(y, x, letter, color.incorrect)
+                        window.addch(y, x, letter, color.incorrect)
                         x += 1
                         game.posx += 1
                         game.ich += 1
                         game.realich += 1
                     else:
-                        window.addstr(y, x, sentence[game.posx], color.incorrect)
+                        window.addch(y, x, sentence[game.posx], color.incorrect)
                         x += 1
                         game.posx += 1
                         game.ich += 1
@@ -407,24 +427,24 @@ def main(window):
             # CASE 3: BACKSPACE
             elif letter == 'KEY_BACKSPACE' and game.posx > 0:
                 if game.posx == len(sentence):
-                    window.addstr(y, x-1, sentence[game.posx-1])
+                    window.addch(y, x-1, sentence[game.posx-1])
                     x -= 1
                     game.posx -= 1
                 else:
                     if stops[game.posy][game.posx-1] == 0:
-                        window.addstr(y, x-1, sentence[game.posx-1])
+                        window.addch(y, x-1, sentence[game.posx-1])
                         x -= 1
                         game.posx -= 1
                         game.realich -= 1
                     elif stops[game.posy][game.posx-1] == 1:
                         stops[game.posy][game.posx-1] = 0
-                        window.addstr(y, x-1, sentence[game.posx-1])
+                        window.addch(y, x-1, sentence[game.posx-1])
                         x -= 1
                         game.posx -= 1
                         game.realcch -= 1
             elif letter == 'KEY_BACKSPACE' and game.posx == 0 and game.posy > 0:
                 game.end_sentence = True
-                window.addstr(y, x, sentence[game.posx])
+                window.addch(y, x, sentence[game.posx])
                 y -= 1
                 game.posy -= 1
                 sentence = sentences[game.posy]
@@ -435,29 +455,33 @@ def main(window):
                 paragraph_mode()
             
             # UPDATE
-            if game.posx > 1 and game.posx != len(sentence) and game.end_sentence == False and (letter in game.letters or letter == chr(39) or letter == chr(45)):
+            if game.posx > 1 and game.posx != len(sentence) and game.end_sentence == False and (letter in game.letters or letter in game.specialchars):
                 game.seconds = (time.time()-start)
                 cchpersecond = game.cch/game.seconds
-                game.wpm = (cchpersecond/5)*60
+                game.wpm = (cchpersecond/min(max(1, game.cch), Game.wordlen))*60
                 game.acc = (game.cch/(game.cch+game.ich))*100
                 game.updatewpm(wpmcounter)
             if game.posx < len(sentence):
-                window.addstr(y, x, sentence[game.posx], curses.A_UNDERLINE)
+                window.addch(y, x, sentence[game.posx], curses.A_UNDERLINE)
                 if game.posx < len(sentence)-1:
-                    window.addstr(y, x+1, sentence[game.posx+1], curses.A_BOLD)
+                    window.addch(y, x+1, sentence[game.posx+1], curses.A_BOLD)
             #INIT NEXT 
             game.end_sentence = False
-            window.refresh()
             window.move(y, x)
 
 
         #DISPLAY INFO
+        window.nodelay(0)
         game.displayinfo()
 
 
     #LOOP
-    while True:
-        menu()
+    if game.x < 50 or game.y < 12:
+        window.addstr(0, 0, f'Error: Terminal Size({game.x}x{game.y}) too small.')
+        window.addstr(2, 0, f'Press any key to quit')
+        window.getch()
+        exit()
+    menu()
     
 
 
