@@ -28,10 +28,8 @@ def main(window):
             self.commands = ['quit', 'q', 'sentence', 's', 'paragraph', 'p', 'help', 'settings', 'c']
             self.openingmessage = 'Welcome to CurseType! Type "sentence" or "help" and press enter.'
             self.consolebanner = f'CurseType Console'
-            self.errormessage = 'Not understood. Try typing "help" or "sentence"'
-            self.ency = ['"sentence" or "s" --generate a random sentence typing test',
-            '"paragraph" or "p" --generate a random paragraph typing test', '"settings" or "c" --settings menu',
-            '"quit" or "q" --quit the game']
+            self.errormessage = 'Not understood. Type "help" for a list of commands.'
+            self.ency = open('guide.txt', 'r').read().splitlines()
             self.specialchars = [chr(39), chr(32), chr(45), 'KEY_BACKSPACE']
             self.settings = ['color', 'difficulty']
             self.settingscolor = ['correct letter', 'incorrect letter', 'menu color']
@@ -704,7 +702,31 @@ def main(window):
             window.nodelay(0)
             self.displayinfo()
 
-        def menu(self, first=False):
+        def guide(self):
+            #INIT GUIDE
+            curses.curs_set(0)
+            self.resetyx()
+            self.resetpos()
+            window.clear()
+            y, x = 1, game.x//2-len(self.ency[1])//2
+            for i in range(len(self.ency)):
+                window.addstr(y+i, x, str(self.ency[i]), color.session)
+            y -= len(self.ency)
+            window.nodelay(1)
+            window.timeout(100)
+            window.refresh()
+            page = 0
+            #LOOP GUIDE
+            while True:
+                try:
+                    key = window.getkey()
+                except:
+                    key = None
+                #CASES GUIDE
+                if key == 'KEY_HOME' or key == 'KEY_BACKSPACE':
+                    self.menu()
+
+        def menu(self):
             curses.curs_set(1)
             self.resetyx()
             self.resetpos()
@@ -749,13 +771,7 @@ def main(window):
                         #help
                         elif userinput == self.commands[6]:
                             displayline.clear()
-                            for i in range(len(self.ency)):
-                                self.consolemessage(displayline, str(self.ency[i]), i, self.x//2-len(str(self.ency[i]))//2)
-                            errortick = tick+80
-                            for i in range(len(userinput)+1):
-                                window.delch(y, x)
-                                x -= 1
-                            window.move(y, max(start, x))
+                            self.guide()
                         elif userinput == self.commands[7]:
                             self.settingsmainmenu()
                         elif userinput == self.commands[8]:
@@ -784,11 +800,6 @@ def main(window):
                     window.move(y, max(start, x))
 
                 #OUTPUT
-                if first:
-                    self.consolemessage(displayline, self.openingmessage, 0, self.x//2-len(self.openingmessage)//2)
-                    errortick = tick+30
-                    first = False
-                    window.move(y, max(start, x))
                 if tick < errortick+32 and tick > errortick+30:
                     displayline.clear()
                     displayline.refresh()
@@ -815,14 +826,14 @@ def main(window):
     # INIT OBJECTS
     color = Color()  
     game = Game()
-    # REJECT SCREEN SIZE < 60x15
-    if game.x < 60 or game.y < 15:
+    # REJECT SCREEN SIZE < 65x15
+    if game.x < 65 or game.y < 15:
         window.addstr(0, 0, f'Error: Terminal Size({game.x}x{game.y}) too small.')
         window.addstr(2, 0, f'Press any key to quit')
         window.getch()
         exit()
     #START GAME
-    game.menu(first=True)
+    game.guide()
     
 
 
