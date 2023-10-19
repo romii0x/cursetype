@@ -1,5 +1,6 @@
 # CurseType
-[License](LICENSE)
+
+![curestype](https://github.com/ianshapiro1/cursetype/assets/39689959/f9ce22e6-494e-407f-9848-c3640b9e1b93)
 
 CurseType is a TUI wpm/accuracy typing test written using the python curses library.  
 It features a console themed menu, sentence/paragraph modes that measure the user's  
@@ -17,7 +18,8 @@ Note: CurseType does not work with windows-curses, so this guide uses WSL.
 1. Download WSL: https://learn.microsoft.com/en-us/windows/wsl/install
 2. Once you have a linux terminal open, follow the Linux and Mac steps above.
 
-Credits  
+License/Credits  
+[License](LICENSE)  
 [Oxford 3000/5000](https://github.com/tgmgroup/Word-List-from-Oxford-Longman-5000)  
 [1-1000.txt](https://gist.github.com/deekayen/4148741)  
 [ASCII text art](http://www.patorjk.com/software/taag) 
