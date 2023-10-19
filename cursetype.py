@@ -31,7 +31,7 @@ def main(window):
             self.errormessage = 'Not understood. Type "help" for a list of commands.'
             self.ency = open('guide.txt', 'r').read().splitlines()
             self.specialchars = [chr(39), chr(32), chr(45), 'KEY_BACKSPACE']
-            self.settings = ['color', 'difficulty']
+            self.settings = ['color', 'vocabulary']
             self.settingscolor = ['correct letter', 'incorrect letter', 'menu color']
             self.settingsdifficulty = ['common words', 'oxford 3000', 'oxford 5000']
             self.end_sentence = False
