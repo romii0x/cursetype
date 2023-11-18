@@ -78,7 +78,7 @@ def main(window):
             y -= len(self.settingsdifficulty)//2
             textstart = y
             def sdminit(y, x, o):
-                window.addstr(y+len(self.settingsdifficulty)+1, x, 'Back(home) | Select(enter)', color.session)
+                window.addstr(y+len(self.settingsdifficulty)+1, x, 'Back(home/del) | Select(enter)', color.session)
                 for i in range(len(self.settingsdifficulty)):
                     if i == option:
                         window.addstr(y, x, self.settingsdifficulty[i], curses.A_REVERSE)
@@ -123,7 +123,7 @@ def main(window):
                         self.setgamedifficulty(2)
                         window.addstr(textstart-3, x, f'Set to {game.settingsdifficulty[2]}')
                 
-                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE':
+                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE' or key == 'KEY_DC':
                     self.settingsmainmenu()
                     #init next screen
                 #init next
@@ -178,7 +178,7 @@ def main(window):
                 elif key == '\n':
                     color.incorrect = curses.color_pair(option)
                     self.settingscolormenu()
-                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE':
+                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE' or key == 'KEY_DC':
                     self.settingscolormenu()
 
                 #init next
@@ -233,7 +233,7 @@ def main(window):
                 elif key == '\n':
                     color.correct = curses.color_pair(option)
                     self.settingscolormenu()
-                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE':
+                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE' or key == 'KEY_DC':
                     self.settingscolormenu()
 
                 #init next
@@ -288,7 +288,7 @@ def main(window):
                 elif key == '\n':
                     color.session = curses.color_pair(option)
                     self.settingscolormenu()
-                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE':
+                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE' or key == 'KEY_DC':
                     self.settingscolormenu()
 
                 #init next
@@ -307,7 +307,7 @@ def main(window):
             y -= len(self.settingscolor)//2
             textstart = y
             def scminit(y, x, o):
-                window.addstr(y+len(self.settingscolor)+1, x, 'Back(home) | Select(enter)', color.session)
+                window.addstr(y+len(self.settingscolor)+1, x, 'Back(home/del) | Select(enter)', color.session)
                 for i in range(len(self.settingscolor)):
                     if i == option:
                         window.addstr(y, x, self.settingscolor[i], curses.A_REVERSE)
@@ -348,7 +348,7 @@ def main(window):
                         #incorrect
                         self.setmenucolor()
                 
-                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE':
+                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE' or key == 'KEY_DC':
                     self.settingsmainmenu()
                     #init next screen
                 #init next
@@ -367,7 +367,7 @@ def main(window):
             option = 0
             textstart = y
             def smminit(y, x, o):
-                window.addstr(y+len(self.settings)+1, x, 'Back(home) | Select(enter)', color.session)
+                window.addstr(y+len(self.settings)+1, x, 'Back(home/del) | Select(enter)', color.session)
                 for i in range(len(self.settings)):
                     if i == option:
                         window.addstr(y, x, self.settings[i], curses.A_REVERSE)
@@ -403,7 +403,7 @@ def main(window):
                     elif option == 1:
                         self.settingsdifficultymenu()
                 
-                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE':
+                elif key == 'KEY_HOME' or key == 'KEY_BACKSPACE' or key == 'KEY_DC':
                     self.menu()
                 #init next
                 window.move(y, x)
@@ -414,7 +414,7 @@ def main(window):
             self.x -= 10
             window.clear()
             window.move(self.y, self.x) 
-            window.addstr(self.y+1, self.x, 'Menu(home) New(enter)', color.session)
+            window.addstr(self.y+1, self.x, 'Menu(home/del) New(enter)', color.session)
             window.addstr(self.y-3, self.x, f'{self.wpm:.2f} wpm', curses.color_pair(color.indicators[int(self.wpm)//10-1]))
             window.addstr(self.y-2, self.x, f'{self.acc:.2f} % ', curses.color_pair(color.indicators[int(self.acc)//10-1]))
             window.addstr(self.y-1, self.x, f'{self.seconds:.2f} (s) ')
@@ -422,7 +422,7 @@ def main(window):
             self.y -= 3
             while True:
                 key = window.getkey()
-                if key == 'KEY_HOME':
+                if key == 'KEY_HOME' or key == 'KEY_DC':
                     self.menu()
                 elif key == '\n':
                     if game.mode == 1:
@@ -493,7 +493,7 @@ def main(window):
             window.addstr(y, x+1, sentence[self.posx+1], curses.A_BOLD)
             window.addstr(y+1, x, s1) 
             window.addstr(y+2, x, s2)
-            window.addstr(y+4, x, 'Exit(home) | New(enter)', color.session)
+            window.addstr(y+4, x, 'Exit(home/del) | New(enter)', color.session)
             window.move(y, x)
             curses.noecho()
             curses.curs_set(0)
@@ -504,7 +504,7 @@ def main(window):
                     letter = window.getkey()
                 except:
                     letter = None
-                if letter == 'KEY_HOME':
+                if letter == 'KEY_HOME' or letter == 'KEY_DC':
                     self.menu()
                 if self.posx == len(sentence) and self.posy == len(sentences)-1 and letter != None:
                     break
@@ -618,7 +618,7 @@ def main(window):
             window.addstr(y, x, sentence)
             window.addstr(y, x, sentence[self.posx], curses.A_UNDERLINE)
             window.addstr(y, x+1, sentence[self.posx+1], curses.A_BOLD)
-            window.addstr(y+2, x, 'Exit(home) | New(enter)', color.session)
+            window.addstr(y+2, x, 'Exit(home/del) | New(enter)', color.session)
             window.move(y, x)
             curses.noecho()
             curses.curs_set(0)
@@ -676,7 +676,7 @@ def main(window):
                             self.posx -= 1
                             self.realcch -= 1
                 
-                elif letter == 'KEY_HOME':
+                elif letter == 'KEY_HOME' or letter == 'KEY_DC':
                     self.menu()
                 # CASE 3: END OF SENTENCE
                 elif self.posx > len(sentence)-1 and letter != None:
@@ -723,7 +723,7 @@ def main(window):
                 except:
                     key = None
                 #CASES GUIDE
-                if key == 'KEY_HOME' or key == 'KEY_BACKSPACE':
+                if key == 'KEY_HOME' or key == 'KEY_DC':
                     self.menu()
 
         def menu(self):
@@ -790,7 +790,7 @@ def main(window):
                         window.delch(y, x-1)
                         x -= 1
                         window.move(y, max(start, x))
-                elif key == 'KEY_HOME':
+                elif key == 'KEY_HOME' or key == 'KEY_DC':
                     displayline.clear()
                     displayline.refresh()
                     window.move(y, max(start, x))

@@ -10,4 +10,4 @@ Commands:
 "settings" or "c" --change the colors or vocabulary
 "quit" or "q" --quit the game
 
-Close(home)
+Close(home/Del)
