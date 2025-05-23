@@ -3,11 +3,4 @@ The game measures wpm and accuracy as you type, then tells
 you the amount of Missed(M), Fixed(F), Incorrect(I), and
 Correct(C) letters upon completion.
 
-Commands:
-"help" --show this guide
-"sentence" or "s" --generate a random sentence typing test
-"paragraph" or "p" --generate a random paragraph typing test
-"settings" or "c" --change the colors or vocabulary
-"quit" or "q" --quit the game
-
 Close(home/Del)
