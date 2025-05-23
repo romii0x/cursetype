@@ -1,25 +1,41 @@
 # CurseType
+![cursetype](https://github.com/user-attachments/assets/d58d8d89-828f-4b83-b378-0ca85b6fb93b)
 
-![cursetype](https://github.com/ianshapiro1/cursetype/assets/39689959/f9ce22e6-494e-407f-9848-c3640b9e1b93)
+**CurseType** is a terminal-based typing test built with Python’s `curses` library.  
 
-CurseType is a TUI wpm/accuracy typing test written using the python curses library.  
-It features a console themed menu, sentence/paragraph modes that measure the user's  
-wpm and accuracy, and a settings menu to change the game's colors or vocabulary.  
+## Features
 
-#### Requirements: Python 3
-### Installation for Linux and Mac:  
-1. Open a terminal in the desired download location.
-2. Clone the repo: `git clone https://github.com/ianshapiro1/cursetype.git`
-3. cd to the project directory: `cd cursetype`
-4. Run the game:  `python3 cursetype.py`
+- **Typing Modes:** Choose between sentence and paragraph modes
+- **Real-Time Metrics:** Displays WPM and accuracy in dynamic colors as you type
+- **Customizable UI:** Change colors and word lists for a personalized experience
 
-### Installation for Windows:  
-Note: CurseType does not work with windows-curses, so this guide uses WSL.  
-1. Download WSL: https://learn.microsoft.com/en-us/windows/wsl/install
-2. Once you have a linux terminal open, follow the Linux and Mac steps above.
+## Requirements
 
-License/Credits  
+- Python 3.7 or higher
+
+## Installation & Usage
+
+### Linux & macOS
+
+```bash
+# Clone the repository
+git clone https://github.com/ianshapiro1/cursetype.git
+
+# Change to the project directory
+cd cursetype
+
+# Run the program
+python3 cursetype.py
+```
+### Windows (via WSL)
+CurseType requires a Unix-like terminal environment. On Windows, use the Windows Subsystem for Linux (WSL) to run the program:
+
+Install WSL by following the official guide:
+https://learn.microsoft.com/en-us/windows/wsl/install
+
+Open your WSL terminal and follow the Linux & macOS installation steps above.
+## License/Credits  
 [License](LICENSE.txt)  
 [Oxford 3000/5000](https://github.com/tgmgroup/Word-List-from-Oxford-Longman-5000)  
-[1-1000.txt](https://gist.github.com/deekayen/4148741)  
+[1-1000.txt](https://gist.github.com/deekayen/4148741)
 [ASCII text art](http://www.patorjk.com/software/taag) 
