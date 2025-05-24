@@ -43,30 +43,6 @@ def displayinfo(window, wpm, acc, seconds, realcch, realich, cch, ich, mode):
             elif mode == 2:
                 logic.paragraph_mode(window)
 
-def guide(window):
-    y, x = window.getmaxyx()
-    curses.curs_set(0)
-    window.clear()
-    x = x // 2 - len(constants.GUIDE_FILE[1]) // 2
-    color_session = curses.color_pair(int(config.config_parser['default']['colorsession']))
-
-    for i, line in enumerate(constants.GUIDE_FILE):
-        window.addstr(1 + i, x, str(line), color_session)
-
-    window.nodelay(1)
-    window.timeout(100)
-    window.refresh()
-
-    while True:
-        try:
-            key = window.getkey()
-        except:
-            key = None
-
-        if key in ['KEY_HOME', 'KEY_DC']:
-            menu(window)
-            return
-
 def menu(window):
     curses.curs_set(0)
     window.clear()
@@ -75,7 +51,6 @@ def menu(window):
     options = [
         ("Sentence Mode", lambda: logic.sentence_mode(window)),
         ("Paragraph Mode", lambda: logic.paragraph_mode(window)),
-        ("Guide", lambda: guide(window)),
         ("Settings", lambda: settings.settingsmainmenu(window)),
         ("Exit", lambda: exit())
     ]

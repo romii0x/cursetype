@@ -36,7 +36,7 @@ def setup_session_color():
         config.config_parser['default']['colorsession'] = str(random.randint(0, 232))
 
 def main(window):
-    # Load config and set game difficulty
+    # Load config and set difficulty
     config.load_config()
     config.setgamedifficulty(int(config.config_parser['default']['difficulty']))
 

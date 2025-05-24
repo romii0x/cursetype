@@ -1,6 +1,7 @@
 import curses
 import configparser
 import random
+import os
 from core import settings, logic, constants
 
 config_parser = configparser.ConfigParser()
@@ -20,18 +21,15 @@ def save_config(filename='settings.ini'):
     with open(filename, 'w') as configfile:
         config_parser.write(configfile)
 
-
 def setgamedifficulty(difficulty):
-    global Words
-    if difficulty == 0:
-        with open('1-1000.txt', 'r') as f:
-            Words = f.read().splitlines()
-    elif difficulty == 1:
-        with open('1-1000.txt', 'r') as f1, open('o3000.txt', 'r') as f2:
-            Words = f1.read().splitlines() + f2.read().splitlines()
-    elif difficulty == 2:
-        with open('o5000.txt', 'r') as f1, open('1-1000.txt', 'r') as f2, open('o3000.txt', 'r') as f3:
-            Words = f1.read().splitlines() + f2.read().splitlines() + f3.read().splitlines()
+    base_path = 'wordlists'
+    file_names = constants.WORDLIST_FILES.get(difficulty, [])
+
+    constants.WORDS = []
+    for name in file_names:
+        full_path = os.path.join(base_path, name)
+        with open(full_path, 'r') as f:
+            constants.WORDS.extend(f.read().splitlines())
 
 
 def color_picker(window, config_key):

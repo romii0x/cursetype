@@ -1,6 +1,0 @@
-Welcome to CurseType, a customizable TUI typing test game.
-The game measures wpm and accuracy as you type, then tells
-you the amount of Missed(M), Fixed(F), Incorrect(I), and
-Correct(C) letters upon completion.
-
-Close(home/Del)

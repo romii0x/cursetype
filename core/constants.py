@@ -17,5 +17,4 @@ WORDLIST_FILES = {
     2: ['o5000.txt', '1-1000.txt', 'o3000.txt']
 }
 
-GUIDE_FILE = open('guide.txt', 'r').read().splitlines()
-WORDS = open('1-1000.txt', 'r').read().splitlines()
+WORDS = []

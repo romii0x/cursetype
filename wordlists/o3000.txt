@@ -987,7 +987,6 @@ fair
 fairly
 faith
 fall
-FALSE
 familiar
 family
 famous
@@ -2752,7 +2751,6 @@ tropical
 trouble
 trousers
 truck
-TRUE
 truly
 trust
 truth
