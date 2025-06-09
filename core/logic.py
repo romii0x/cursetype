@@ -28,9 +28,7 @@ def draw_sentence_lines(window, sentences, start_y, start_x):
 
 def highlight_characters(window, y, x, sentence, posx):
     if posx < len(sentence):
-        window.addch(y, x, sentence[posx], curses.A_UNDERLINE)
-        if posx + 1 < len(sentence):
-            window.addch(y, x + 1, sentence[posx + 1], curses.A_BOLD)
+        window.addch(y, x, sentence[posx], curses.A_UNDERLINE | curses.A_BOLD)
 
 
 def handle_backspace(window, y, x, posx, stops, sentence, realcch, realich):
