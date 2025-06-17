@@ -7,7 +7,7 @@
 ```
 **CurseType** is a terminal-based typing test built with Python’s `curses` library.  
 
-![cursetype](https://github.com/user-attachments/assets/d58d8d89-828f-4b83-b378-0ca85b6fb93b)
+![cursetype](https://github.com/user-attachments/assets/859a7ff6-b417-4793-be52-8ec4c5fdb001)
 
 ## Features
 
