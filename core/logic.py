@@ -38,6 +38,9 @@ def handle_backspace(window, y, x, char_position, stops, sentence, final_correct
         final_correct_chars -= 1
         stops[char_position - 1] = 0
     window.addch(y, x - 1, sentence[char_position - 1])
+    # Clear the underline at the current position (only if char_position is valid)
+    if char_position < len(sentence):
+        window.addch(y, x, sentence[char_position])
     return x - 1, char_position - 1, final_correct_chars, final_incorrect_chars
 
 
@@ -56,6 +59,7 @@ def typing_loop(window, sentences, center_y, center_x, is_paragraph):
     wpm = accuracy = seconds = 0
     start = None
     wpm_display_window = curses.newwin(1, curses.COLS, center_y - 2, center_x)
+    moved_to_previous_line = False
 
     window.nodelay(True)
     window.timeout(100)
@@ -106,12 +110,12 @@ def typing_loop(window, sentences, center_y, center_x, is_paragraph):
             else:
                 incorrect_chars += 1
                 final_incorrect_chars += 1
-                if expected_char == ' ' and letter != ' ':
+                if expected_char == ' ':
+                    # Show the incorrect character that was typed
                     window.addch(center_y, cursor_x_offset, letter, color_incorrect)
-                elif expected_char != ' ' and letter == ' ':
-                    window.addch(center_y, cursor_x_offset, expected_char, color_incorrect)
                 else:
-                    window.addch(center_y, cursor_x_offset, letter, color_incorrect)
+                    # Show the correct character that should have been typed
+                    window.addch(center_y, cursor_x_offset, expected_char, color_incorrect)
             cursor_x_offset += 1
             char_position += 1
 
@@ -122,11 +126,16 @@ def typing_loop(window, sentences, center_y, center_x, is_paragraph):
             if char_position > 0:
                 cursor_x_offset, char_position, final_correct_chars, final_incorrect_chars = handle_backspace(window, center_y, cursor_x_offset, char_position, stops[sentence_position], sentence, final_correct_chars, final_incorrect_chars)
             elif char_position == 0 and sentence_position > 0:
+                # Clear highlight from current line before moving
+                window.addch(center_y, center_x, sentence[0])
                 sentence_position -= 1
                 sentence = sentences[sentence_position]
-                char_position = len(sentence)
+                char_position = len(sentence) - 1
                 center_y -= 1
-                cursor_x_offset += char_position
+                cursor_x_offset = center_x + char_position
+                # Update highlight for the new line
+                highlight_characters(window, center_y, cursor_x_offset, sentence, char_position)
+                moved_to_previous_line = True
 
         elif letter == '\n':
             return sentence_mode(window) if not is_paragraph else paragraph_mode(window)
@@ -137,7 +146,9 @@ def typing_loop(window, sentences, center_y, center_x, is_paragraph):
             accuracy = (correct_chars / (correct_chars + incorrect_chars)) * 100
             ui.updatewpm(wpm_display_window, wpm, accuracy)
 
-        highlight_characters(window, center_y, cursor_x_offset, sentence, char_position)
+        if not moved_to_previous_line:
+            highlight_characters(window, center_y, cursor_x_offset, sentence, char_position)
+        moved_to_previous_line = False
         window.move(center_y, cursor_x_offset)
 
     window.nodelay(False)
