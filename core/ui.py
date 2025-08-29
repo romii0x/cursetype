@@ -1,20 +1,20 @@
 import curses
 from core import constants, settings, logic, config
 
-def updatewpm(counter, wpm, acc):
+def updatewpm(counter, wpm, accuracy):
     counter.clear()
     wpm_index = max(min(int(wpm) // 10 - 1, len(constants.COLOR_INDICATORS) - 1), 0)
-    acc_index = max(min(int(acc) // 10 - 1, len(constants.COLOR_INDICATORS) - 1), 0)
+    accuracy_index = max(min(int(accuracy) // 10 - 1, len(constants.COLOR_INDICATORS) - 1), 0)
     
     if wpm < 200:
         counter.addstr(0, 0, f'{wpm:.2f} wpm ', curses.color_pair(constants.COLOR_INDICATORS[wpm_index]))
-        counter.addstr(0, 11, f'| {acc:.2f} %', curses.color_pair(constants.COLOR_INDICATORS[acc_index]))
+        counter.addstr(0, 11, f'| {accuracy:.2f} %', curses.color_pair(constants.COLOR_INDICATORS[accuracy_index]))
     else:
         counter.addstr(0, 0, f'{wpm:.2f} wpm ')
-        counter.addstr(0, 11, f'| {acc:.2f} %', curses.color_pair(constants.COLOR_INDICATORS[acc_index]))
+        counter.addstr(0, 11, f'| {accuracy:.2f} %', curses.color_pair(constants.COLOR_INDICATORS[accuracy_index]))
     counter.refresh()
 
-def displayinfo(window, wpm, acc, seconds, realcch, realich, cch, ich, mode):
+def displayinfo(window, wpm, accuracy, seconds, final_correct_chars, final_incorrect_chars, correct_chars, incorrect_chars, mode):
     y, x = window.getmaxyx()
     x //= 2
     y //= 2
@@ -25,13 +25,13 @@ def displayinfo(window, wpm, acc, seconds, realcch, realich, cch, ich, mode):
     
     color_session = curses.color_pair(int(config.config_parser['default']['colorsession']))
     wpm_index = max(min(int(wpm) // 10 - 1, len(constants.COLOR_INDICATORS) - 1), 0)
-    acc_index = max(min(int(acc) // 10 - 1, len(constants.COLOR_INDICATORS) - 1), 0)
+    accuracy_index = max(min(int(accuracy) // 10 - 1, len(constants.COLOR_INDICATORS) - 1), 0)
 
     window.addstr(y+1, x, 'Menu(home/del) New(enter)', color_session)
     window.addstr(y-3, x, f'{wpm:.2f} wpm', curses.color_pair(constants.COLOR_INDICATORS[wpm_index]))
-    window.addstr(y-2, x, f'{acc:.2f} % ', curses.color_pair(constants.COLOR_INDICATORS[acc_index]))
+    window.addstr(y-2, x, f'{accuracy:.2f} % ', curses.color_pair(constants.COLOR_INDICATORS[accuracy_index]))
     window.addstr(y-1, x, f'{seconds:.2f} (s) ')
-    window.addstr(y, x, f'C: {realcch} I: {realich} M: {ich} F: {ich - realich}')
+    window.addstr(y, x, f'C: {final_correct_chars} I: {final_incorrect_chars} M: {incorrect_chars} F: {incorrect_chars - final_incorrect_chars}')
 
     while True:
         key = window.getkey()

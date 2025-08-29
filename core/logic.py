@@ -26,33 +26,36 @@ def draw_sentence_lines(window, sentences, start_y, start_x):
         window.addstr(start_y + idx, start_x, line)
 
 
-def highlight_characters(window, y, x, sentence, posx):
-    if posx < len(sentence):
-        window.addch(y, x, sentence[posx], curses.A_UNDERLINE | curses.A_BOLD)
+def highlight_characters(window, y, x, sentence, char_position):
+    if char_position < len(sentence):
+        window.addch(y, x, sentence[char_position], curses.A_UNDERLINE | curses.A_BOLD)
 
 
-def handle_backspace(window, y, x, posx, stops, sentence, realcch, realich):
-    if stops[posx - 1] == 0:
-        realich -= 1
+def handle_backspace(window, y, x, char_position, stops, sentence, final_correct_chars, final_incorrect_chars):
+    if stops[char_position - 1] == 0:
+        final_incorrect_chars -= 1
     else:
-        realcch -= 1
-        stops[posx - 1] = 0
-    window.addch(y, x - 1, sentence[posx - 1])
-    return x - 1, posx - 1, realcch, realich
+        final_correct_chars -= 1
+        stops[char_position - 1] = 0
+    window.addch(y, x - 1, sentence[char_position - 1])
+    return x - 1, char_position - 1, final_correct_chars, final_incorrect_chars
 
 
 def typing_loop(window, sentences, center_y, center_x, is_paragraph):
     col_width = curses.COLS - 2 * center_x
-    posx = posy = 0
-    x_offset = center_x
+    char_position = sentence_position = 0
+    cursor_x_offset = center_x
     sentence = sentences[0]
-    wordlen = avg_word_length(" ".join(sentences).split())
+    average_word_length = avg_word_length(" ".join(sentences).split())
 
-    cch = ich = realcch = realich = 0
+    correct_chars = 0
+    incorrect_chars = 0
+    final_correct_chars = 0
+    final_incorrect_chars = 0
     stops = [[0 for _ in s] for s in sentences]
-    wpm = acc = seconds = 0
+    wpm = accuracy = seconds = 0
     start = None
-    wpmcounter = curses.newwin(1, curses.COLS, center_y - 2, center_x)
+    wpm_display_window = curses.newwin(1, curses.COLS, center_y - 2, center_x)
 
     window.nodelay(True)
     window.timeout(100)
@@ -62,7 +65,7 @@ def typing_loop(window, sentences, center_y, center_x, is_paragraph):
 
     draw_sentence_lines(window, sentences, center_y, center_x)
     window.addstr(center_y + (len(sentences) + 1), center_x, 'Exit(home/del) | New(enter)', curses.color_pair(int(config.config_parser['default']['colorsession'])))
-    highlight_characters(window, center_y, center_x, sentence, posx)
+    highlight_characters(window, center_y, center_x, sentence, char_position)
     window.move(center_y, center_x)
     window.refresh()
 
@@ -76,69 +79,69 @@ def typing_loop(window, sentences, center_y, center_x, is_paragraph):
             ui.menu(window)
 
         if letter is not None and (letter in constants.LETTERS or letter in " '-"):
-            if posx == 0 and posy == 0:
+            if char_position == 0 and sentence_position == 0:
                 start = time.time()
 
-            if posx >= len(sentence):
-                if is_paragraph and posy < len(sentences) - 1:
+            if char_position >= len(sentence):
+                if is_paragraph and sentence_position < len(sentences) - 1:
                     center_y += 1
-                    x_offset -= posx
-                    posx = 0
-                    posy += 1
-                    sentence = sentences[posy]
+                    cursor_x_offset -= char_position
+                    char_position = 0
+                    sentence_position += 1
+                    sentence = sentences[sentence_position]
                     continue
                 else:
                     break
 
-            expected_char = sentence[posx]
+            expected_char = sentence[char_position]
             is_correct = letter == expected_char
             color_correct = curses.color_pair(int(config.config_parser['default']['colorcorrect']))
             color_incorrect = curses.color_pair(int(config.config_parser['default']['colorincorrect']))
-            stops[posy][posx] = 1 if is_correct else 0
+            stops[sentence_position][char_position] = 1 if is_correct else 0
 
             if is_correct:
-                cch += 1
-                realcch += 1
-                window.addch(center_y, x_offset, expected_char, color_correct)
+                correct_chars += 1
+                final_correct_chars += 1
+                window.addch(center_y, cursor_x_offset, expected_char, color_correct)
             else:
-                ich += 1
-                realich += 1
+                incorrect_chars += 1
+                final_incorrect_chars += 1
                 if expected_char == ' ' and letter != ' ':
-                    window.addch(center_y, x_offset, letter, color_incorrect)
+                    window.addch(center_y, cursor_x_offset, letter, color_incorrect)
                 elif expected_char != ' ' and letter == ' ':
-                    window.addch(center_y, x_offset, expected_char, color_incorrect)
+                    window.addch(center_y, cursor_x_offset, expected_char, color_incorrect)
                 else:
-                    window.addch(center_y, x_offset, letter, color_incorrect)
-            x_offset += 1
-            posx += 1
+                    window.addch(center_y, cursor_x_offset, letter, color_incorrect)
+            cursor_x_offset += 1
+            char_position += 1
 
-            if posx >= len(sentence) and posy == len(sentences) - 1:
+            if char_position >= len(sentence) and sentence_position == len(sentences) - 1:
                 break
 
         elif letter == 'KEY_BACKSPACE':
-            if posx > 0:
-                x_offset, posx, realcch, realich = handle_backspace(window, center_y, x_offset, posx, stops[posy], sentence, realcch, realich)
-            elif posx == 0 and posy > 0:
-                posy -= 1
-                sentence = sentences[posy]
-                posx = len(sentence)
+            if char_position > 0:
+                cursor_x_offset, char_position, final_correct_chars, final_incorrect_chars = handle_backspace(window, center_y, cursor_x_offset, char_position, stops[sentence_position], sentence, final_correct_chars, final_incorrect_chars)
+            elif char_position == 0 and sentence_position > 0:
+                sentence_position -= 1
+                sentence = sentences[sentence_position]
+                char_position = len(sentence)
                 center_y -= 1
-                x_offset += posx
+                cursor_x_offset += char_position
 
         elif letter == '\n':
             return sentence_mode(window) if not is_paragraph else paragraph_mode(window)
 
-        if posx > 1 and posx != len(sentence) and letter in constants.LETTERS + constants.SPECIAL_CHARS:
+        if char_position > 1 and char_position != len(sentence) and letter in constants.LETTERS + constants.SPECIAL_CHARS:
             seconds = time.time() - start
-            wpm = (cch / seconds / max(1, wordlen)) * 60
-            acc = (cch / (cch + ich)) * 100
-            ui.updatewpm(wpmcounter, wpm, acc)
+            wpm = (correct_chars / seconds / max(1, average_word_length)) * 60
+            accuracy = (correct_chars / (correct_chars + incorrect_chars)) * 100
+            ui.updatewpm(wpm_display_window, wpm, accuracy)
 
-        highlight_characters(window, center_y, x_offset, sentence, posx)
-        window.move(center_y, x_offset)
+        highlight_characters(window, center_y, cursor_x_offset, sentence, char_position)
+        window.move(center_y, cursor_x_offset)
 
     window.nodelay(False)
-    ui.displayinfo(window, wpm, acc, seconds, realcch, realich, cch, ich, 2 if is_paragraph else 1)
+    ui.displayinfo(window, wpm, accuracy, seconds, final_correct_chars, final_incorrect_chars, correct_chars, incorrect_chars, 2 if is_paragraph else 1)
 
 
 def paragraph_mode(window):
