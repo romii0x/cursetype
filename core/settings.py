@@ -35,10 +35,10 @@ def menu_loop(window, items, on_select, on_back):
         except:
             key = None
 
-        if key == 'KEY_UP' and selected > 0:
-            selected -= 1
-        elif key == 'KEY_DOWN' and selected < len(items) - 1:
-            selected += 1
+        if key == 'KEY_UP':
+            selected = (selected - 1) % len(items)
+        elif key == 'KEY_DOWN':
+            selected = (selected + 1) % len(items)
         elif key == '\n':
             on_select(selected)
         elif key in ('KEY_HOME', 'KEY_BACKSPACE', 'KEY_DC'):
