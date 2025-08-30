@@ -84,7 +84,7 @@ def highlight_characters(window, y, x, sentence, char_position):
         window.addch(y, x, sentence[char_position], curses.A_UNDERLINE | curses.A_BOLD)
 
 
-def handle_backspace(window, y, x, char_position, stops, sentence, final_correct_chars, final_incorrect_chars):
+def handle_backspace(window, y, x, char_position, stops, sentence, final_correct_chars, final_incorrect_chars, correct_chars, incorrect_chars):
     """
     Handle backspace functionality by restoring the previous character.
     
@@ -97,15 +97,19 @@ def handle_backspace(window, y, x, char_position, stops, sentence, final_correct
         sentence: Current sentence being typed
         final_correct_chars: Count of final correct characters
         final_incorrect_chars: Count of final incorrect characters
+        correct_chars: Count of total correct characters typed
+        incorrect_chars: Count of total incorrect characters typed
         
     Returns:
-        tuple: Updated (x, char_position, final_correct_chars, final_incorrect_chars)
+        tuple: Updated (x, char_position, final_correct_chars, final_incorrect_chars, correct_chars, incorrect_chars)
     """
     # Decrement the appropriate counter based on what was typed
     if stops[char_position - 1] == 0:
         final_incorrect_chars -= 1
+        incorrect_chars -= 1
     else:
         final_correct_chars -= 1
+        correct_chars -= 1
         stops[char_position - 1] = 0
     
     # Restore the previous character to its original state
@@ -113,7 +117,7 @@ def handle_backspace(window, y, x, char_position, stops, sentence, final_correct
     # Clear the underline at the current position (only if char_position is valid)
     if char_position < len(sentence):
         window.addch(y, x, sentence[char_position])
-    return x - 1, char_position - 1, final_correct_chars, final_incorrect_chars
+    return x - 1, char_position - 1, final_correct_chars, final_incorrect_chars, correct_chars, incorrect_chars
 
 
 def typing_loop(window, sentences, center_y, center_x, is_paragraph):
@@ -141,7 +145,6 @@ def typing_loop(window, sentences, center_y, center_x, is_paragraph):
     char_position = sentence_position = 0
     cursor_x_offset = center_x
     sentence = sentences[0]
-    average_word_length = avg_word_length(" ".join(sentences).split())
 
     # Initialize character counters
     correct_chars = 0
@@ -159,6 +162,7 @@ def typing_loop(window, sentences, center_y, center_x, is_paragraph):
     # Create WPM display window
     wpm_display_window = curses.newwin(1, curses.COLS, center_y - 2, center_x)
     moved_to_previous_line = False
+    just_backspaced = False  # Flag to track if we just backspaced
 
     # Configure window for non-blocking input
     window.nodelay(True)
@@ -189,7 +193,10 @@ def typing_loop(window, sentences, center_y, center_x, is_paragraph):
 
         # Handle valid character input
         if letter is not None and (letter in constants.LETTERS or letter in " '-"):
-            # Start timing on first character
+            # Reset backspace flag when typing new characters
+            just_backspaced = False
+            
+            # Start timing on first character or restart if backspaced to beginning
             if char_position == 0 and sentence_position == 0:
                 start = time.time()
 
@@ -234,6 +241,21 @@ def typing_loop(window, sentences, center_y, center_x, is_paragraph):
             cursor_x_offset += 1
             char_position += 1
 
+            # Update WPM and accuracy display (ONLY when typing new characters)
+            if start is not None:
+                seconds = time.time() - start
+                # Only calculate WPM if we have characters typed and positive time
+                if final_correct_chars > 0 and seconds > 0:
+                    # Standard character-based WPM calculation (5 characters per word)
+                    # This matches industry standards used by MonkeyType, TypeRacer, etc.
+                    # Use final_correct_chars to reflect actual final performance
+                    wpm = (final_correct_chars / seconds / 5) * 60
+                    accuracy = (final_correct_chars / (final_correct_chars + final_incorrect_chars)) * 100
+                    ui.updatewpm(wpm_display_window, wpm, accuracy)
+                else:
+                    # Reset WPM display when no characters are typed
+                    ui.updatewpm(wpm_display_window, 0, 0)
+
             # Check if we've completed the entire test
             if char_position >= len(sentence) and sentence_position == len(sentences) - 1:
                 break
@@ -242,10 +264,11 @@ def typing_loop(window, sentences, center_y, center_x, is_paragraph):
             # Handle backspace functionality
             if char_position > 0:
                 # Regular backspace within the same line
-                cursor_x_offset, char_position, final_correct_chars, final_incorrect_chars = handle_backspace(
+                cursor_x_offset, char_position, final_correct_chars, final_incorrect_chars, correct_chars, incorrect_chars = handle_backspace(
                     window, center_y, cursor_x_offset, char_position, 
-                    stops[sentence_position], sentence, final_correct_chars, final_incorrect_chars
+                    stops[sentence_position], sentence, final_correct_chars, final_incorrect_chars, correct_chars, incorrect_chars
                 )
+                just_backspaced = True
             elif char_position == 0 and sentence_position > 0:
                 # Backspace to previous line in paragraph mode
                 # Clear highlight from current line before moving
@@ -258,17 +281,24 @@ def typing_loop(window, sentences, center_y, center_x, is_paragraph):
                 # Update highlight for the new line
                 highlight_characters(window, center_y, cursor_x_offset, sentence, char_position)
                 moved_to_previous_line = True
+                just_backspaced = True  # Set backspace flag for line-to-line backspace too
+            
+            # Reset everything if we've backspaced to the very beginning
+            if char_position == 0 and sentence_position == 0:
+                # Reset all counters and timing
+                correct_chars = 0
+                incorrect_chars = 0
+                final_correct_chars = 0
+                final_incorrect_chars = 0
+                start = None
+                wpm = accuracy = seconds = 0
+                just_backspaced = False  # Reset backspace flag when starting over
+                # Clear WPM display
+                ui.updatewpm(wpm_display_window, 0, 0)
 
         elif letter == '\n':
             # Start a new typing test
             return sentence_mode(window) if not is_paragraph else paragraph_mode(window)
-
-        # Update WPM and accuracy display (only after typing has started)
-        if char_position > 1 and char_position != len(sentence) and letter in constants.LETTERS + constants.SPECIAL_CHARS:
-            seconds = time.time() - start
-            wpm = (correct_chars / seconds / max(1, average_word_length)) * 60
-            accuracy = (correct_chars / (correct_chars + incorrect_chars)) * 100
-            ui.updatewpm(wpm_display_window, wpm, accuracy)
 
         # Update character highlighting (skip if we just moved to previous line)
         if not moved_to_previous_line:
@@ -278,7 +308,20 @@ def typing_loop(window, sentences, center_y, center_x, is_paragraph):
 
     # End of typing test - restore normal input mode and show results
     window.nodelay(False)
-    ui.displayinfo(window, wpm, accuracy, seconds, final_correct_chars, final_incorrect_chars, 
+    
+    # Calculate final WPM and accuracy using final character counts
+    if start is not None and final_correct_chars > 0:
+        final_seconds = time.time() - start
+        # Standard character-based WPM calculation (5 characters per word)
+        # This matches industry standards used by MonkeyType, TypeRacer, etc.
+        final_wpm = (final_correct_chars / final_seconds / 5) * 60
+        final_accuracy = (final_correct_chars / (final_correct_chars + final_incorrect_chars)) * 100
+    else:
+        final_wpm = wpm
+        final_accuracy = accuracy
+        final_seconds = seconds
+    
+    ui.displayinfo(window, final_wpm, final_accuracy, final_seconds, final_correct_chars, final_incorrect_chars, 
                    correct_chars, incorrect_chars, 2 if is_paragraph else 1)
 
 

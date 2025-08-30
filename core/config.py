@@ -57,12 +57,13 @@ def setgamedifficulty(difficulty):
     Load word lists based on the selected difficulty level.
     
     Different difficulty levels use different word lists:
-    - 0: Common words only (1-1000.txt)
-    - 1: Common + Oxford 3000 words
-    - 2: All word lists (Oxford 5000 + Common + Oxford 3000)
+    - 0: MonkeyType default (200 most common words)
+    - 1: English 1000 (most common words)
+    - 2: English 1000 + Oxford 3000 words
+    - 3: All word lists (Oxford 5000 + English 1000 + Oxford 3000)
     
     Args:
-        difficulty: Difficulty level (0, 1, or 2)
+        difficulty: Difficulty level (0, 1, 2, or 3)
     """
     base_path = 'wordlists'
     file_names = constants.WORDLIST_FILES.get(difficulty, [])

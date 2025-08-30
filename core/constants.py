@@ -19,7 +19,7 @@ SPECIAL_CHARS = [chr(39), chr(32), chr(45), 'KEY_BACKSPACE']
 # Settings menu options
 SETTINGS = ['color', 'vocabulary']
 SETTINGS_COLOR = ['correct letter', 'incorrect letter', 'menu color']
-SETTINGS_DIFFICULTY = ['common words', 'oxford 3000', 'oxford 5000']
+SETTINGS_DIFFICULTY = ['monkeytype 200', 'english 1000', 'oxford 3000', 'oxford 5000']
 
 # Color indicators for WPM/accuracy display
 # Colors change based on performance: blue (great) -> green (good) -> yellow (average)-> red (poor)
@@ -32,9 +32,10 @@ MIN_TERMINAL_HEIGHT = 15
 # Word list file mappings by difficulty level
 # Each difficulty level loads different word files for varied vocabulary
 WORDLIST_FILES = {
-    0: ['1-1000.txt'],                    # Common words
-    1: ['1-1000.txt', 'o3000.txt'],       # Common + Oxford 3000
-    2: ['o5000.txt', '1-1000.txt', 'o3000.txt']  # All word lists
+    0: ['monkeytype-200.txt'],             # MonkeyType default (200 most common)
+    1: ['english-1000.txt'],               # English 1000
+    2: ['english-1000.txt', 'oxford-3000.txt'],  # English 1000 + Oxford 3000
+    3: ['oxford-5000.txt', 'english-1000.txt', 'oxford-3000.txt']  # Oxford 5000 + English 1000 + Oxford 3000
 }
 
 # Global word list - populated at runtime based on difficulty setting

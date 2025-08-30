@@ -25,9 +25,10 @@
 - **Dynamic Color Feedback**: Performance-based color changes (blue -> green -> yellow -> red)
 
 ### **Multiple Difficulty Levels**
-- **1st Level**: 1,000 most common English words
-- **2nd Level**: Common words + Oxford 3000
-- **3rd Level**: Common words + Oxford 3000 + Oxford 5000
+- **MonkeyType Default**: 200 most common English words (matches MonkeyType's default)
+- **English 1000**: 1,000 most common English words
+- **Oxford 3000**: English 1000 + Oxford 3000 word list
+- **Oxford 5000**: All word lists (Oxford 5000 + English 1000 + Oxford 3000)
 
 ## Requirements
 
@@ -92,9 +93,10 @@ CurseType requires a Unix-like terminal environment. On Windows, use the Windows
 - **Performance Optimization**: Efficient character-by-character processing
 
 ### Word Lists
-- **1-1000.txt**: Most common English words
-- **o3000.txt**: Oxford 3000 word list
-- **o5000.txt**: Oxford 5000 word list
+- **monkeytype-200.txt**: 200 most common English words (MonkeyType default)
+- **english-1000.txt**: 1,000 most common English words
+- **oxford-3000.txt**: Oxford 3000 word list
+- **oxford-5000.txt**: Oxford 5000 word list
 
 ### Performance Metrics
 - **WPM Calculation**: Based on average word length and typing time
@@ -110,4 +112,5 @@ Contributions are welcome! Please feel free to submit issues, feature requests, 
 - **License**: [LICENSE.txt](LICENSE.txt)
 - **Word Lists**: 
   - [Oxford 3000/5000](https://github.com/tgmgroup/Word-List-from-Oxford-Longman-5000)
-  - [1-1000.txt](https://gist.github.com/deekayen/4148741)
+  - [English 1000](https://gist.github.com/deekayen/4148741)
+  - [MonkeyType 200](https://github.com/monkeytypegame/monkeytype/blob/master/frontend/static/languages/english.json)
