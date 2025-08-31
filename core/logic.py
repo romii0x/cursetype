@@ -189,7 +189,13 @@ def typing_loop(window, sentences, center_y, center_x, is_paragraph):
 
         # Handle exit commands
         if letter in ('KEY_HOME', 'KEY_DC'):
+            # Reset terminal to normal mode before returning to menu
+            window.nodelay(False)
+            window.timeout(-1)  # Reset to blocking mode
+            curses.curs_set(0)  # Hide cursor
+            curses.echo()  # Re-enable echo
             ui.menu(window)
+            return  # Actually exit the typing loop
 
         # Handle valid character input
         if letter is not None and (letter in constants.LETTERS or letter in " '-"):

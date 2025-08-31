@@ -174,6 +174,11 @@ def color_picker(window, config_key):
                 save_config()
                 settings.settingscolormenu(window)
         elif key in ('KEY_HOME', 'KEY_BACKSPACE', 'KEY_DC'):
+            # Reset terminal to normal mode before going back
+            window.nodelay(False)
+            window.timeout(-1)  # Reset to blocking mode
+            curses.curs_set(0)  # Hide cursor
+            curses.echo()  # Re-enable echo
             settings.settingscolormenu(window)
 
         window.move(y, x)

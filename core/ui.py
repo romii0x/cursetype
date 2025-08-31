@@ -88,7 +88,13 @@ def displayinfo(window, wpm, accuracy, seconds, final_correct_chars, final_incor
     while True:
         key = window.getkey()
         if key in ['KEY_HOME', 'KEY_DC']:
+            # Reset terminal to normal mode before returning to menu
+            window.nodelay(False)
+            window.timeout(-1)  # Reset to blocking mode
+            curses.curs_set(0)  # Hide cursor
+            curses.echo()  # Re-enable echo
             menu(window)
+            return  # Exit the displayinfo function
         elif key == '\n':
             # Start a new test in the same mode
             if mode == 1:
@@ -106,7 +112,11 @@ def menu(window):
     Args:
         window: Curses window for the menu interface
     """
+    # Ensure terminal is in the correct state for menu interaction
     curses.curs_set(0)  # Hide cursor
+    window.nodelay(False)  # Ensure blocking mode
+    window.timeout(-1)  # No timeout
+    curses.echo()  # Enable echo
     window.clear()
     height, width = window.getmaxyx()
 
